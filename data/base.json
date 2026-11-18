@@ -1,0 +1,160 @@
+{
+  "_metadata": {
+    "projeto": "Citizen Assist AI",
+    "frente_responsavel": "Frente A - Arquitetura de Dados & Persistência",
+    "total_registros": 15,
+    "criterio_fase": "Fases 1 a 6 (Python nativo com URLs auditadas)"
+  },
+  "registros": [
+    {
+      "id": 1,
+      "tema": "Documentacao",
+      "palavras_chave": ["rg", "identidade", "segunda via", "2 via", "documento"],
+      "pergunta_exemplo": "Como tirar a segunda via do RG?",
+      "orientacao_resumida": "Compareça a um posto do Poupatempo ou Instituto de Identificação com boletim de ocorrência (se furtado/roubado) e certidão original.",
+      "referencia_fonte": "Poupatempo São Paulo",
+      "url_fonte": "https://www.poupatempo.sp.gov.br/",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 2,
+      "tema": "Documentacao",
+      "palavras_chave": ["cpf", "regularizar", "situacao cadastral"],
+      "pergunta_exemplo": "Como regularizar a situação do meu CPF?",
+      "orientacao_resumida": "A consulta e regularização podem ser feitas diretamente pelo site da Receita Federal na página de regularização.",
+      "referencia_fonte": "Receita Federal do Brasil",
+      "url_fonte": "https://www.gov.br/receitafederal/pt-br/assuntos/meu-cpf",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 3,
+      "tema": "Documentacao",
+      "palavras_chave": ["titulo", "eleitor", "eleitoral", "regularizar"],
+      "pergunta_exemplo": "Como consultar minha situação eleitoral?",
+      "orientacao_resumida": "Acesse o portal do Tribunal Superior Eleitoral (TSE) na seção Autoatendimento Eleitoral para verificar débitos e certidões.",
+      "referencia_fonte": "Tribunal Superior Eleitoral - TSE",
+      "url_fonte": "https://www.tse.jus.br/",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 4,
+      "tema": "Documentacao",
+      "palavras_chave": ["carteira", "trabalho", "ctps", "digital"],
+      "pergunta_exemplo": "Como acessar a Carteira de Trabalho Digital?",
+      "orientacao_resumida": "Baixe o aplicativo Carteira de Trabalho Digital no celular ou acesse pelo portal Gov.br usando seu CPF e senha.",
+      "referencia_fonte": "Portal Gov.br - Ministério do Trabalho",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/obter-a-carteira-de-trabalho",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 5,
+      "tema": "Documentacao",
+      "palavras_chave": ["certidao", "nascimento", "2 via", "cartorio"],
+      "pergunta_exemplo": "Como tirar 2 via de certidão de nascimento?",
+      "orientacao_resumida": "Solicite online através do portal oficial Registradores.br ou diretamente no cartório de registro original.",
+      "referencia_fonte": "Registradores.br",
+      "url_fonte": "https://registradores.onr.org.br/",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 6,
+      "tema": "Servicos Publicos",
+      "palavras_chave": ["seguro", "desemprego", "solicitar", "entrada"],
+      "pergunta_exemplo": "Como dar entrada no seguro-desemprego?",
+      "orientacao_resumida": "O pedido pode ser feito pelo portal Gov.br ou aplicativo Carteira de Trabalho Digital após a demissão sem justa causa.",
+      "referencia_fonte": "Portal Gov.br",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/solicitar-o-seguro-desemprego",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 7,
+      "tema": "Servicos Publicos",
+      "palavras_chave": ["inss", "aposentadoria", "beneficio", "meu inss"],
+      "pergunta_exemplo": "Como consultar meus benefícios do INSS?",
+      "orientacao_resumida": "Utilize o aplicativo ou site Meu INSS com login Gov.br para solicitar aposentadorias, auxílios e extratos.",
+      "referencia_fonte": "Meu INSS / Gov.br",
+      "url_fonte": "https://meu.inss.gov.br/",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 8,
+      "tema": "Servicos Publicos",
+      "palavras_chave": ["saude", "sus", "cartao", "atendimento"],
+      "pergunta_exemplo": "Para que serve o Cartão Nacional de Saúde (Cartão SUS)?",
+      "orientacao_resumida": "Ele vincula os atendimentos do cidadão na rede pública. Pode ser emitido digitalmente pelo Conecte SUS.",
+      "referencia_fonte": "Ministério da Saúde",
+      "url_fonte": "https://www.gov.br/saude/pt-br/acesso-a-informacao/acoes-e-programas/conecte-sus",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 9,
+      "tema": "Servicos Publicos",
+      "palavras_chave": ["agua", "luz", "tarifa", "social", "energia"],
+      "pergunta_exemplo": "O que é a Tarifa Social de Energia Elétrica?",
+      "orientacao_resumida": "Desconto na conta de luz para famílias inscritas no CadÚnico com baixa renda ou beneficiários do BPC.",
+      "referencia_fonte": "ANEEL",
+      "url_fonte": "https://www.gov.br/aneel/pt-br/assuntos/tarifa-social",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 10,
+      "tema": "Servicos Publicos",
+      "palavras_chave": ["transporte", "passe", "livre", "idoso", "deficiencia"],
+      "pergunta_exemplo": "Como solicitar o Passe Livre Interestadual?",
+      "orientacao_resumida": "Benefício para pessoas com deficiência de baixa renda que garante viagens interestaduais gratuitas via portal Gov.br.",
+      "referencia_fonte": "Ministério dos Transportes",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/obter-o-passe-livre-para-pessoa-com-deficiencia",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 11,
+      "tema": "Direitos e Assistencia",
+      "palavras_chave": ["bolsa", "familia", "auxilio", "cadastro", "unico"],
+      "pergunta_exemplo": "Como se cadastrar no Bolsa Família?",
+      "orientacao_resumida": "É preciso estar inscrito no CadÚnico com dados atualizados no CRAS do município e atender aos critérios de renda.",
+      "referencia_fonte": "Ministério do Desenvolvimento e Assistência Social",
+      "url_fonte": "https://www.gov.br/mds/pt-br/acoes-e-programas/bolsa-familia",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 12,
+      "tema": "Direitos e Assistencia",
+      "palavras_chave": ["procon", "consumidor", "reclamacao", "direitos"],
+      "pergunta_exemplo": "Como registrar uma reclamação no Procon?",
+      "orientacao_resumida": "Reclamações contra empresas podem ser abertas presencialmente no Procon local ou online pelo Consumidor.gov.br.",
+      "referencia_fonte": "Consumidor.gov.br",
+      "url_fonte": "https://www.consumidor.gov.br/",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 13,
+      "tema": "Direitos e Assistencia",
+      "palavras_chave": ["trabalho", "fgts", "saque", "aniversario"],
+      "pergunta_exemplo": "Como funciona o Saque-Aniversário do FGTS?",
+      "orientacao_resumida": "Permite retirar parte do saldo da conta do FGTS anualmente no mês de aniversário. Opção ativada no app do FGTS.",
+      "referencia_fonte": "Caixa Econômica Federal",
+      "url_fonte": "https://www.caixa.gov.br/beneficios-trabalhador/fgts/saque-aniversario/paginas/default.aspx",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 14,
+      "tema": "Direitos e Assistencia",
+      "palavras_chave": ["bpc", "loas", "idoso", "deficiencia", "amparo"],
+      "pergunta_exemplo": "Quem tem direito ao BPC/LOAS?",
+      "orientacao_resumida": "Idosos com 65+ ou pessoas com deficiência de baixa renda (renda per capita inferior a 1/4 do salário mínimo).",
+      "referencia_fonte": "INSS / Portal Gov.br",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/solicitar-beneficio-de-prestacao-continuada-bpc-para-idoso",
+      "data_verificacao": "2026-11-18"
+    },
+    {
+      "id": 15,
+      "tema": "Direitos e Assistencia",
+      "palavras_chave": ["escola", "matricula", "educacao", "infantil"],
+      "pergunta_exemplo": "Como fazer matrícula na rede pública de ensino?",
+      "orientacao_resumida": "Inscrições feitas nos períodos divulgados pelas Secretarias Estaduais ou Municipais de Educação no final do ano.",
+      "referencia_fonte": "Ministério da Educação - MEC",
+      "url_fonte": "https://www.gov.br/mec/pt-br",
+      "data_verificacao": "2026-11-18"
+    }
+  ]
+}
