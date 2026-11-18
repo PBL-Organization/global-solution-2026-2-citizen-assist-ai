@@ -2,174 +2,371 @@
 =============================================================================
 PROJETO: Citizen Assist AI (Global Solution 2026.2 - FIAP)
 ARQUIVO: sistema.py
-FRENTE RESPONSÁVEL: Frente B (Core Backend, Algoritmos de Busca & Navegação)
-INTEGRANTE: Squad CitizenTech
-DESCRIÇÃO: Script principal contendo o menu CLI, pipeline de sanitização de 
-           texto, busca linear pontuada (score), exibição de fontes auditadas 
-           e arquitetura de descoberta dinâmica de UX.
-STACK: Python Puro (Restrito estritamente às Fases 1 a 6)
+FRENTE RESPONSÁVEL: Frente A (Persistência) & Frente B (Core e Busca)
+DESCRIÇÃO: Script principal contendo o menu CLI, sanitização de texto,
+           busca linear pontuada, fontes auditadas e navegação por temas.
+STACK: Python Puro (Restrito estritamente às Fases 1 a 6 - Sem try/except)
 =============================================================================
 """
 
-import os
-import json
+from __future__ import annotations
 
-def carregar_base(caminho: str = "data/base.json") -> list:
+import json
+import os
+import unicodedata
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+
+Registro = Dict[str, object]
+Grafo = Dict[str, List[str]]
+PONTUACAO_MINIMA = 1
+
+TEMAS_RELACIONADOS: Dict[str, List[str]] = {
+    "Documentacao": ["Servicos Publicos", "Direitos e Assistencia"],
+    "Servicos Publicos": ["Documentacao", "Direitos e Assistencia"],
+    "Direitos e Assistencia": ["Servicos Publicos", "Documentacao"],
+}
+
+CHAVES_OBRIGATORIAS = [
+    "id",
+    "tema",
+    "palavras_chave",
+    "pergunta_exemplo",
+    "orientacao_resumida",
+    "referencia_fonte",
+    "url_fonte",
+    "data_verificacao",
+]
+
+
+def _caminho_base_padrao() -> str:
+    raiz = os.path.dirname(os.path.abspath(__file__))
+    # Ajuste para buscar na pasta data/ na raiz do projeto
+    return os.path.join(os.path.dirname(raiz), "data", "base.json")
+
+
+def carregar_base(caminho: Optional[str] = None) -> List[Registro]:
     """
-    Realiza a leitura defensiva da base de conhecimento JSON sem utilizar try/except.
-    Conforme diretrizes das Fases 1 a 6, utiliza validações condicionais puras.
+    Carrega e valida defensivamente a base JSON utilizando estritamente
+    programação defensiva condicional (Fases 1 a 6, sem try/except).
     """
+    caminho = caminho or _caminho_base_padrao()
+
+    # 1. Validação física: Verifica se o arquivo existe no disco
     if not os.path.exists(caminho):
         print(f"[ERRO CRÍTICO] Arquivo de base não encontrado em: {caminho}")
         return []
-    
-    with open(caminho, "r", encoding="utf-8") as f:
-        conteudo = f.read()
-        
-    if not conteudo.strip():
+
+    # 2. Validação condicional de permissão de leitura (Substitui tratamento de OSError)
+    if not os.access(caminho, os.R_OK):
+        print(f"[ERRO] Sem permissão de leitura para o arquivo: {caminho}")
+        return []
+
+    # Leitura segura do fluxo de texto bruto
+    with open(caminho, "r", encoding="utf-8") as arquivo:
+        conteudo = arquivo.read()
+
+    # 3. Validação condicional de conteúdo vazio
+    conteudo_limpo = conteudo.strip()
+    if not conteudo_limpo:
         print("[AVISO] O arquivo base.json está vazio.")
         return []
-        
+
+    # 4. Validação estrutural defensiva (Substitui o JSONDecodeError da Fase 7)
+    # Um JSON válido em Python deve iniciar obrigatoriamente com '{' ou '['
+    if not (conteudo_limpo.startswith("{") or conteudo_limpo.startswith("[")):
+        print("[ERRO] O conteúdo do arquivo não possui uma estrutura JSON válida.")
+        return []
+
+    # Decodificação segura após as barreiras condicionais
     dados = json.loads(conteudo)
-    
-    # Extração segura da lista de registros
-    if isinstance(dados, dict) and "registros" in dados:
+
+    if isinstance(dados, dict) and isinstance(dados.get("registros"), list):
         lista_registros = dados["registros"]
     elif isinstance(dados, list):
         lista_registros = dados
     else:
-        lista_registros = []
+        print("[ERRO] Formato da base inválido.")
+        return []
 
-    # Validação defensiva de chaves obrigatórias por registro
-    chaves_obrigatorias = [
-        "id", "tema", "palavras_chave", 
-        "pergunta_exemplo", "orientacao_resumida", 
-        "referencia_fonte", "url_fonte", "data_verificacao"
-    ]
-    
-    registros_validados = []
-    for reg in lista_registros:
-        valido = True
-        for chave in chaves_obrigatorias:
-            if chave not in reg:
-                valido = False
-                break
-        if valido:
-            registros_validados.append(reg)
+    registros_validados: List[Registro] = []
+    for registro in lista_registros:
+        if not isinstance(registro, dict):
+            continue
+        if all(chave in registro for chave in CHAVES_OBRIGATORIAS):
+            registros_validados.append(registro)
 
     return registros_validados
 
-def sanitizar_texto(texto: str) -> list:
-    """
-    Pipeline de normalização textual: converte para minúsculas, remove 
-    pontuações básicas e quebra a frase em tokens (lista de palavras).
-    """
-    texto_limpo = texto.lower().strip()
-    for char in ["?", "!", ".", ",", ";", ":", "-", '"', "'", "º", "°"]:
-        texto_limpo = texto_limpo.replace(char, "")
-    return texto_limpo.split()
 
-def buscar_orientacao(tokens_usuario: list, registros: list) -> dict:
-    """
-    Algoritmo de Busca Linear O(n) com pontuação (Score Heurístico).
-    Cruza os tokens da consulta com as palavras-chave cadastradas no JSON.
-    """
-    melhor_registro = None
-    maior_score = 0
+def _sem_acentos(texto: str) -> str:
+    normalizado = unicodedata.normalize("NFD", texto)
+    return "".join(
+        caractere
+        for caractere in normalizado
+        if unicodedata.category(caractere) != "Mn"
+    )
 
-    for reg in registros:
-        score = 0
-        palavras_chave = reg.get("palavras_chave", [])
-        
-        for token in tokens_usuario:
-            if token in palavras_chave:
-                score += 1
-                
-        if score > maior_score:
-            maior_score = score
-            melhor_registro = reg
 
-    if maior_score > 0:
-        return melhor_registro
-    return None
+def sanitizar_texto(texto: str) -> List[str]:
+    """Normaliza texto, remove acentos e pontuação e retorna tokens."""
+    texto_limpo = _sem_acentos(str(texto).lower().strip())
+    caracteres_validos: List[str] = []
+    for caractere in texto_limpo:
+        if caractere.isalnum() or caractere.isspace():
+            caracteres_validos.append(caractere)
+        else:
+            caracteres_validos.append(" ")
+    return "".join(caracteres_validos).split()
 
-def exibir_relacionados(tema_atual: str, id_atual: int, registros: list):
-    """
-    Módulo de UX (Arquitetura de Descoberta): exibe uma mini-lista dinâmica 
-    de sugestões do mesmo tema, filtrando e excluindo o ID atual exibido.
-    """
-    print("\n--- 💡 Você também pode querer saber sobre ---")
-    encontrados = 0
-    for reg in registros:
-        if reg.get("tema") == tema_atual and reg.get("id") != id_atual:
-            print(f"  ▪ {reg.get('pergunta_exemplo')}")
-            encontrados += 1
-            if encontrados >= 3:  # Limita a 3 sugestões limpas na tela
-                break
-                
-    if encontrados == 0:
+
+def _tokens_palavras_chave(palavras_chave: Iterable[object]) -> List[str]:
+    tokens: List[str] = []
+    for palavra in palavras_chave:
+        tokens.extend(sanitizar_texto(str(palavra)))
+    return tokens
+
+
+def pontuar_registro(tokens_usuario: Sequence[str], registro: Registro) -> int:
+    """Calcula a pontuação pela interseção com as palavras-chave."""
+    palavras_chave = registro.get("palavras_chave", [])
+    if not isinstance(palavras_chave, list):
+        return 0
+
+    tokens_chave = set(_tokens_palavras_chave(palavras_chave))
+    score = len(set(tokens_usuario).intersection(tokens_chave))
+    consulta = " ".join(tokens_usuario)
+
+    for palavra in palavras_chave:
+        chave = " ".join(sanitizar_texto(str(palavra)))
+        if chave and " " in chave and chave in consulta:
+            score += 1
+
+    return score
+
+
+def _criterio_desempate(registro: Registro, indice: int) -> Tuple[int, str, int]:
+    # Substituindo try/except interno por checagem condicional de tipo
+    id_val = registro.get("id", indice + 1)
+    if isinstance(id_val, int):
+        identificador = id_val
+    elif isinstance(id_val, str) and id_val.isdigit():
+        identificador = int(id_val)
+    else:
+        identificador = indice + 1
+
+    return (
+        identificador,
+        str(registro.get("pergunta_exemplo", "")).casefold(),
+        indice,
+    )
+
+
+def buscar_orientacoes(
+    tokens_usuario: Sequence[str], registros: Sequence[Registro]
+) -> List[Tuple[int, Registro]]:
+    """Realiza busca linear O(n), ordenada por score e desempate determinístico."""
+    resultados: List[Tuple[int, Registro, int]] = []
+    for indice, registro in enumerate(registros):
+        score = pontuar_registro(tokens_usuario, registro)
+        if score >= PONTUACAO_MINIMA:
+            resultados.append((score, registro, indice))
+
+    resultados.sort(
+        key=lambda item: (-item[0], _criterio_desempate(item[1], item[2]))
+    )
+    return [(score, registro) for score, registro, _ in resultados]
+
+
+def buscar_orientacao(
+    tokens_usuario: Sequence[str], registros: Sequence[Registro]
+) -> Optional[Registro]:
+    """Mantém a API original e retorna somente o melhor resultado."""
+    resultados = buscar_orientacoes(tokens_usuario, registros)
+    return resultados[0][1] if resultados else None
+
+
+def construir_grafo(registros: Sequence[Registro]) -> Grafo:
+    """Cria um grafo de adjacência entre os temas presentes na base."""
+    temas: List[str] = []
+    for registro in registros:
+        tema = str(registro.get("tema", "")).strip()
+        if tema and tema not in temas:
+            temas.append(tema)
+
+    grafo: Grafo = {tema: [] for tema in temas}
+    for tema in temas:
+        vizinhos_preferenciais = TEMAS_RELACIONADOS.get(tema, [])
+        grafo[tema] = [vizinho for vizinho in vizinhos_preferenciais if vizinho in grafo]
+        if not grafo[tema]:
+            grafo[tema] = [outro for outro in temas if outro != tema]
+
+    return grafo
+
+
+def assuntos_relacionados(
+    registro: Registro,
+    registros: Sequence[Registro],
+    grafo: Grafo,
+    limite: int = 3,
+) -> List[Registro]:
+    """Obtém registros do tema atual e dos temas vizinhos no grafo."""
+    tema = str(registro.get("tema", ""))
+    temas_visitados = [tema] + grafo.get(tema, [])
+    relacionados: List[Registro] = []
+
+    for tema_visitado in temas_visitados:
+        for candidato in registros:
+            if candidato is registro or candidato in relacionados:
+                continue
+            if str(candidato.get("tema", "")) == tema_visitado:
+                relacionados.append(candidato)
+                if len(relacionados) >= limite:
+                    return relacionados
+
+    return relacionados
+
+
+def exibir_relacionados(
+    registro: Registro,
+    registros: Sequence[Registro],
+    grafo: Grafo,
+    limite: int = 3,
+) -> None:
+    """Exibe sugestões relacionadas ao resultado encontrado."""
+    print("\n--- Assuntos relacionados (navegação pelo grafo) ---")
+    relacionados = assuntos_relacionados(registro, registros, grafo, limite)
+
+    if not relacionados:
         print("  (Nenhuma outra sugestão cadastrada neste tema)")
-
-def main():
-    registros = carregar_base()
-    if not registros:
-        print("[ERRO] Sistema encerrado. Verifique o arquivo data/base.json.")
         return
 
+    for indice, relacionado in enumerate(relacionados, start=1):
+        print(
+            f"  {indice}. [{relacionado.get('tema')}] "
+            f"{relacionado.get('pergunta_exemplo')}"
+        )
+
+
+def exibir_resultado(registro: Registro, score: Optional[int] = None) -> None:
+    """Exibe uma orientação e suas fontes auditadas."""
+    print("\n" + "=" * 60)
+    print(f"RESULTADO ENCONTRADO (Tema: {registro.get('tema', 'não informado')})")
+    print("=" * 60)
+    print(f"Dúvida relacionada: {registro.get('pergunta_exemplo', 'não informada')}")
+    print(f"Orientação: {registro.get('orientacao_resumida', 'não informada')}")
+    print(f"Fonte oficial: {registro.get('referencia_fonte', 'não informada')}")
+    if registro.get("url_fonte"):
+        print(f"Link oficial: {registro.get('url_fonte')}")
+    print(f"Data de verificação: {registro.get('data_verificacao', 'não informada')}")
+    if score is not None:
+        print(f"Pontuação da busca: {score}")
+    print("Aviso: confirme a informação nos canais oficiais antes de tomar decisões.")
+    print("=" * 60)
+
+
+def escolher_opcao(mensagem: str, opcoes_validas: Sequence[str]) -> str:
+    """Solicita uma opção até que o usuário informe uma alternativa válida."""
+    while True:
+        opcao = input(mensagem).strip()
+        if opcao in opcoes_validas:
+            return opcao
+        print(f"[ERRO] Opção inválida. Escolha: {', '.join(opcoes_validas)}.")
+
+
+def escolher_tema(registros: Sequence[Registro]) -> Optional[str]:
+    """Exibe os temas e permite selecionar um deles."""
+    temas: List[str] = []
+    for registro in registros:
+        tema = str(registro.get("tema", "")).strip()
+        if tema and tema not in temas:
+            temas.append(tema)
+
+    if not temas:
+        print("[AVISO] Não há temas cadastrados.")
+        return None
+
+    print("\n--- Temas disponíveis ---")
+    for indice, tema in enumerate(temas, start=1):
+        print(f"[{indice}] {tema}")
+
+    while True:
+        escolha = input("Escolha o número do tema (ou 0 para voltar): ").strip()
+        if escolha == "0":
+            return None
+        if escolha.isdigit() and 1 <= int(escolha) <= len(temas):
+            return temas[int(escolha) - 1]
+        print("[ERRO] Selecione um número válido ou 0 para voltar.")
+
+
+def consultar(pergunta: str, registros: Sequence[Registro], grafo: Grafo) -> None:
+    """Processa uma consulta livre e mostra o melhor resultado."""
+    tokens = sanitizar_texto(pergunta)
+    if not tokens:
+        print("[AVISO] A consulta não pode ficar vazia. Digite uma dúvida válida.")
+        return
+
+    resultados = buscar_orientacoes(tokens, registros)
+    if not resultados:
+        print("\n[GUARDRAIL ATIVADO] Não encontrei orientação correspondente na base curada.")
+        print(
+            "Não vou inventar uma resposta. Consulte um canal oficial ou tente "
+            "RG, CPF, INSS ou seguro-desemprego."
+        )
+        return
+
+    score, resultado = resultados[0]
+    exibir_resultado(resultado, score)
+    exibir_relacionados(resultado, registros, grafo)
+
+
+def main() -> None:
+    registros = carregar_base()
+    if not registros:
+        print("[ERRO] Sistema encerrado por falta de dados na base.")
+        return
+
+    grafo = construir_grafo(registros)
     print("=" * 60)
     print("      CITIZEN ASSIST AI - ORIENTAÇÃO CIDADÃ INTELIGENTE")
     print("=" * 60)
     print(f"Base carregada com sucesso. Total de registros validados: {len(registros)}")
 
     while True:
-        print("\n[1] Consultar Dúvida Cidadã")
-        print("[2] Listar Todos os Temas Disponíveis")
-        print("[0] Encerrar Sistema")
-        
-        opcao = input("\nEscolha uma opção: ").strip()
-        
+        print("\n[1] Fazer busca livre")
+        print("[2] Navegar por temas")
+        print("[3] Listar todos os temas")
+        print("[0] Sair do sistema")
+        opcao = escolher_opcao("Escolha uma opção: ", ["0", "1", "2", "3"])
+
         if opcao == "0":
-            print("\nEncerrando o Citizen Assist AI. Bom trabalho, engenheiro!")
+            print("\nEncerrando o Citizen Assist AI. Até logo!")
             break
-            
-        elif opcao == "1":
-            pergunta = input("\nDigite sua dúvida (ex: Como tirar 2 via do RG?): ")
-            tokens = sanitizar_texto(pergunta)
-            
-            if not tokens:
-                print("[AVISO] Entrada vazia. Por favor, digite uma consulta válida.")
-                continue
-                
-            resultado = buscar_orientacao(tokens, registros)
-            
-            if resultado:
-                print("\n" + "=" * 50)
-                print(f"RESULTADO ENCONTRADO (Tema: {resultado.get('tema')})")
-                print("=" * 50)
-                print(f"Dúvida: {resultado.get('pergunta_exemplo')}")
-                print(f"Orientação: {resultado.get('orientacao_resumida')}")
-                print(f"Órgão/Fonte: {resultado.get('referencia_fonte')}")
-                print(f"Link Oficial: {resultado.get('url_fonte')}")
-                print(f"Data de Verificação: {resultado.get('data_verificacao')}")
-                print("=" * 50)
-                
-                # Executa a arquitetura de descoberta de UX
-                exibir_relacionados(resultado.get('tema'), resultado.get('id'), registros)
-            else:
-                print("\n[GUARDRAIL ATIVADO] Não encontrei orientações específicas para sua busca.")
-                print("Dica: Tente usar termos-chave mais diretos (ex: 'rg', 'cpf', 'seguro-desemprego').")
-                
+
+        if opcao == "1":
+            consultar(input("Digite sua dúvida: "), registros, grafo)
+
         elif opcao == "2":
-            print("\n--- Temas Cadastrados na Base ---")
-            temas = []
-            for r in registros:
-                t = r.get("tema")
-                if t not in temas:
-                    temas.append(t)
-            for t in temas:
-                print(f"  • {t}")
+            tema = escolher_tema(registros)
+            if tema is None:
+                continue
+
+            filtrados = [registro for registro in registros if registro.get("tema") == tema]
+            print(f"\n--- Orientações de {tema} ---")
+            for registro in filtrados:
+                print(f"• {registro.get('pergunta_exemplo')}")
+
+            pergunta = input(
+                "Digite uma dúvida para buscar neste tema (ou Enter para voltar): "
+            )
+            if pergunta.strip():
+                consultar(pergunta, filtrados, grafo)
+
         else:
-            print("\n[ERRO] Opção inválida. Escolha 1, 2 ou 0 no menu.")
+            print("\n--- Temas cadastrados e conexões do grafo ---")
+            for tema, vizinhos in grafo.items():
+                conexoes = ", ".join(vizinhos) or "nenhum"
+                print(f"• {tema} (relacionado a: {conexoes})")
+
 
 if __name__ == "__main__":
     main()
