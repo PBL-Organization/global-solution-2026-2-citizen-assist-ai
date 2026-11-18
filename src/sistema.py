@@ -3,9 +3,11 @@
 PROJETO: Citizen Assist AI (Global Solution 2026.2 - FIAP)
 ARQUIVO: sistema.py
 FRENTE RESPONSÁVEL: Frente B (Core Backend, Algoritmos de Busca & Navegação)
+INTEGRANTE: Squad CitizenTech
 DESCRIÇÃO: Script principal contendo o menu CLI, pipeline de sanitização de 
-           texto, busca linear pontuada (score) e exibição de fontes auditadas.
-STACK: Python Puro (Restrito às Fases 1 a 6)
+           texto, busca linear pontuada (score), exibição de fontes auditadas 
+           e arquitetura de descoberta dinâmica de UX.
+STACK: Python Puro (Restrito estritamente às Fases 1 a 6)
 =============================================================================
 """
 
@@ -13,7 +15,10 @@ import os
 import json
 
 def carregar_base(caminho: str = "data/base.json") -> list:
-    #Carrega a base de conhecimento de forma defensiva
+    """
+    Realiza a leitura defensiva da base de conhecimento JSON sem utilizar try/except.
+    Conforme diretrizes das Fases 1 a 6, utiliza validações condicionais puras.
+    """
     if not os.path.exists(caminho):
         print(f"[ERRO CRÍTICO] Arquivo de base não encontrado em: {caminho}")
         return []
@@ -26,24 +31,48 @@ def carregar_base(caminho: str = "data/base.json") -> list:
         return []
         
     dados = json.loads(conteudo)
+    
+    # Extração segura da lista de registros
     if isinstance(dados, dict) and "registros" in dados:
-        return dados["registros"]
+        lista_registros = dados["registros"]
     elif isinstance(dados, list):
-        return dados
-    return []
+        lista_registros = dados
+    else:
+        lista_registros = []
+
+    # Validação defensiva de chaves obrigatórias por registro
+    chaves_obrigatorias = [
+        "id", "tema", "palavras_chave", 
+        "pergunta_exemplo", "orientacao_resumida", 
+        "referencia_fonte", "url_fonte", "data_verificacao"
+    ]
+    
+    registros_validados = []
+    for reg in lista_registros:
+        valido = True
+        for chave in chaves_obrigatorias:
+            if chave not in reg:
+                valido = False
+                break
+        if valido:
+            registros_validados.append(reg)
+
+    return registros_validados
 
 def sanitizar_texto(texto: str) -> list:
-    #Normaliza o texto do usuário: transforma em minúsculas e quebra em tokens.
+    """
+    Pipeline de normalização textual: converte para minúsculas, remove 
+    pontuações básicas e quebra a frase em tokens (lista de palavras).
+    """
     texto_limpo = texto.lower().strip()
-    # Remove pontuações simples manualmente (Python puro)
-    for char in ["?", "!", ".", ",", ";", ":", "-", '"', "'"]:
+    for char in ["?", "!", ".", ",", ";", ":", "-", '"', "'", "º", "°"]:
         texto_limpo = texto_limpo.replace(char, "")
     return texto_limpo.split()
 
 def buscar_orientacao(tokens_usuario: list, registros: list) -> dict:
     """
-    Executa busca linear O(n) pontuada (score) cruzando os tokens do usuário
-    com as palavras-chave cadastradas no JSON.
+    Algoritmo de Busca Linear O(n) com pontuação (Score Heurístico).
+    Cruza os tokens da consulta com as palavras-chave cadastradas no JSON.
     """
     melhor_registro = None
     maior_score = 0
@@ -52,7 +81,6 @@ def buscar_orientacao(tokens_usuario: list, registros: list) -> dict:
         score = 0
         palavras_chave = reg.get("palavras_chave", [])
         
-        # Conta quantas palavras da consulta batem com as palavras-chave do registro
         for token in tokens_usuario:
             if token in palavras_chave:
                 score += 1
@@ -61,40 +89,47 @@ def buscar_orientacao(tokens_usuario: list, registros: list) -> dict:
             maior_score = score
             melhor_registro = reg
 
-    # Se encontrou ao menos 1 correspondência relevante
     if maior_score > 0:
         return melhor_registro
     return None
 
-def exibir_relacionados(tema_atual: str, registros: list):
-    """Simula a navegação por grafo/temas relacionados (Fase 4)."""
-    print("\n--- Assuntos Relacionados no Mesma Tema ---")
+def exibir_relacionados(tema_atual: str, id_atual: int, registros: list):
+    """
+    Módulo de UX (Arquitetura de Descoberta): exibe uma mini-lista dinâmica 
+    de sugestões do mesmo tema, filtrando e excluindo o ID atual exibido.
+    """
+    print("\n--- 💡 Você também pode querer saber sobre ---")
     encontrados = 0
     for reg in registros:
-        if reg.get("tema") == tema_atual and encontrados < 2:
-            print(f"• Dúvida: {reg.get('pergunta_exemplo')}")
+        if reg.get("tema") == tema_atual and reg.get("id") != id_atual:
+            print(f"  ▪ {reg.get('pergunta_exemplo')}")
             encontrados += 1
+            if encontrados >= 3:  # Limita a 3 sugestões limpas na tela
+                break
+                
+    if encontrados == 0:
+        print("  (Nenhuma outra sugestão cadastrada neste tema)")
 
 def main():
     registros = carregar_base()
     if not registros:
-        print("[ERRO] Sistema encerrado por falta de dados na base.")
+        print("[ERRO] Sistema encerrado. Verifique o arquivo data/base.json.")
         return
 
     print("=" * 60)
     print("      CITIZEN ASSIST AI - ORIENTAÇÃO CIDADÃ INTELIGENTE")
     print("=" * 60)
-    print(f"Base carregada com sucesso. Total de registros: {len(registros)}")
+    print(f"Base carregada com sucesso. Total de registros validados: {len(registros)}")
 
     while True:
-        print("\n[1] Consultar Dúvida")
+        print("\n[1] Consultar Dúvida Cidadã")
         print("[2] Listar Todos os Temas Disponíveis")
-        print("[0] Sair do Sistema")
+        print("[0] Encerrar Sistema")
         
         opcao = input("\nEscolha uma opção: ").strip()
         
         if opcao == "0":
-            print("\nEncerrando o Citizen Assist AI. Até logo!")
+            print("\nEncerrando o Citizen Assist AI. Bom trabalho, engenheiro!")
             break
             
         elif opcao == "1":
@@ -102,7 +137,7 @@ def main():
             tokens = sanitizar_texto(pergunta)
             
             if not tokens:
-                print("[AVISO] Por favor, digite uma consulta válida.")
+                print("[AVISO] Entrada vazia. Por favor, digite uma consulta válida.")
                 continue
                 
             resultado = buscar_orientacao(tokens, registros)
@@ -118,11 +153,11 @@ def main():
                 print(f"Data de Verificação: {resultado.get('data_verificacao')}")
                 print("=" * 50)
                 
-                # Exibe navegação complementar
-                exibir_relacionados(resultado.get('tema'), registros)
+                # Executa a arquitetura de descoberta de UX
+                exibir_relacionados(resultado.get('tema'), resultado.get('id'), registros)
             else:
                 print("\n[GUARDRAIL ATIVADO] Não encontrei orientações específicas para sua busca.")
-                print("Dica: Tente usar palavras-chave mais diretas (ex: 'rg', 'cpf', 'seguro-desemprego').")
+                print("Dica: Tente usar termos-chave mais diretos (ex: 'rg', 'cpf', 'seguro-desemprego').")
                 
         elif opcao == "2":
             print("\n--- Temas Cadastrados na Base ---")
@@ -132,9 +167,9 @@ def main():
                 if t not in temas:
                     temas.append(t)
             for t in temas:
-                print(f"• {t}")
+                print(f"  • {t}")
         else:
-            print("\n[ERRO] Opção inválida. Escolha 1, 2 ou 0.")
+            print("\n[ERRO] Opção inválida. Escolha 1, 2 ou 0 no menu.")
 
 if __name__ == "__main__":
     main()
