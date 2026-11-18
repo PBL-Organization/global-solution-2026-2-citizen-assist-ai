@@ -103,7 +103,7 @@
       "pergunta_exemplo": "Como solicitar o Passe Livre Interestadual?",
       "orientacao_resumida": "Benefício para pessoas com deficiência de baixa renda que garante viagens interestaduais gratuitas via portal Gov.br.",
       "referencia_fonte": "Ministério dos Transportes",
-      "url_fonte": "https://www.gov.br/pt-br/servicos/obter-o-passe-livre-para-pessoa-com-deficiencia",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/obter-passe-livre-interestadual-digital",
       "data_verificacao": "2026-11-18"
     },
     {
@@ -123,7 +123,7 @@
       "pergunta_exemplo": "Como registrar uma reclamação no Procon?",
       "orientacao_resumida": "Reclamações contra empresas podem ser abertas presencialmente no Procon local ou online pelo Consumidor.gov.br.",
       "referencia_fonte": "Consumidor.gov.br",
-      "url_fonte": "https://www.consumidor.gov.br/",
+      "url_fonte": "https://www.procon.sp.gov.br/espaco-consumidor/",
       "data_verificacao": "2026-11-18"
     },
     {
@@ -133,7 +133,7 @@
       "pergunta_exemplo": "Como funciona o Saque-Aniversário do FGTS?",
       "orientacao_resumida": "Permite retirar parte do saldo da conta do FGTS anualmente no mês de aniversário. Opção ativada no app do FGTS.",
       "referencia_fonte": "Caixa Econômica Federal",
-      "url_fonte": "https://www.caixa.gov.br/beneficios-trabalhador/fgts/saque-aniversario/paginas/default.aspx",
+      "url_fonte": "https://www.fgts.gov.br/Paginas/trabalhador/saque-aniversario.aspx",
       "data_verificacao": "2026-11-18"
     },
     {
@@ -143,7 +143,7 @@
       "pergunta_exemplo": "Quem tem direito ao BPC/LOAS?",
       "orientacao_resumida": "Idosos com 65+ ou pessoas com deficiência de baixa renda (renda per capita inferior a 1/4 do salário mínimo).",
       "referencia_fonte": "INSS / Portal Gov.br",
-      "url_fonte": "https://www.gov.br/pt-br/servicos/solicitar-beneficio-de-prestacao-continuada-bpc-para-idoso",
+      "url_fonte": "https://www.gov.br/pt-br/servicos/solicitar-beneficio-assistencial-a-pessoa-com-deficiencia ",
       "data_verificacao": "2026-11-18"
     },
     {
@@ -153,7 +153,7 @@
       "pergunta_exemplo": "Como fazer matrícula na rede pública de ensino?",
       "orientacao_resumida": "Inscrições feitas nos períodos divulgados pelas Secretarias Estaduais ou Municipais de Educação no final do ano.",
       "referencia_fonte": "Ministério da Educação - MEC",
-      "url_fonte": "https://www.gov.br/mec/pt-br",
+      "url_fonte": "https://servicos.sp.gov.br/fcarta/6f885778-1823-4a49-9204-a6e76c5a9d27",
       "data_verificacao": "2026-11-18"
     }
   ]
