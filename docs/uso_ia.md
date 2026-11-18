@@ -1,4 +1,4 @@
-'# Registro de Uso de Inteligência Artificial — Citizen Assist AI
+# Registro de Uso de Inteligência Artificial — Citizen Assist AI
 
 Este documento registra com transparência como ferramentas de Inteligência Artificial Generativa foram empregadas como apoio técnico durante o desenvolvimento do projeto **Citizen Assist AI** (Global Solution 2026.2 — FIAP), detalhando os prompts utilizados, as limitações identificadas e as intervenções críticas realizadas pela equipe.
 
