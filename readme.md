@@ -59,7 +59,7 @@ Em avaliação com usuário externo no terminal:
 
 ## 8. Como Executar o Projeto
 1. Clone o repositório e acesse a pasta:
-   ```bash
+   bash
    git clone https://github.com/PBL-Organization/global-solution-2026-2-citizen-assist-ai.git https://github.com/PBL-Organization/global-solution-2026-2-citizen-assist-ai.git
    cd global-solution-2026-2-citizen-assist-ai
 
